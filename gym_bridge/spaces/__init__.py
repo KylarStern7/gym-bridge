@@ -1,0 +1,2 @@
+from gym_bridge.spaces.multi_binary_limited import MultiBinaryLimited
+from gym_bridge.spaces.multi_integer_limited import MultiIntegerLimited
