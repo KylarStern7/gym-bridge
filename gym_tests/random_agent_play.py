@@ -7,7 +7,7 @@ env = gym.make('gym_bridge:bridge-v0')
 env.seed(0)
 agents = {'N': None, 'E': None, 'S': None, 'W': None}
 
-episode_count = 1
+episode_count = 100
 
 for i in range(episode_count):
     reward = 0
@@ -20,7 +20,6 @@ for i in range(episode_count):
     while True:
         agent = agents[env.state['active_player']]
         action = agent.act(env.get_available_actions(env.state['active_player']), ob, reward, done)
-        print(action)
         ob_old = ob
         ob, reward, done, _ = env.step(action)
         sleep(0)

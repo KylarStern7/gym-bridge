@@ -7,12 +7,12 @@ import random
 
 # noinspection SpellCheckingInspection
 class AgentDQN:
-    def __init__(self, gamma, max_experiences, min_experiences, batch_size, epsilon):
+    def __init__(self, gamma, max_experiences, min_experiences, batch_size, epsilon, model=None):
         self.batch_size = batch_size
         self.gamma = gamma
-        self.epsilon = 0.99
-        self.online_network = self.neural_model()
-        self.target_network = self.neural_model()
+        self.epsilon = epsilon
+        self.online_network = self.neural_model() if model is None else model
+        self.target_network = self.neural_model() if model is None else model
         self.copy_weights()
         self.experience = deque(maxlen=max_experiences)
         self.min_experiences = min_experiences
@@ -33,6 +33,7 @@ class AgentDQN:
         input_x = Input(shape=(56,))
         x = Dense(128, activation='tanh')(input_x)
         x = Dense(256, activation='tanh')(x)
+        x = Dense(512, activation='tanh')(x)
         output_x = Dense(52, activation='linear')(x)
 
         model = Model(input_x, output_x)
@@ -70,7 +71,7 @@ class AgentDQN:
             return np.random.choice(52)
         else:
             preds = self.online_network.predict(np.atleast_2d(states))[0]
-            return np.random.choice(np.argwhere(preds == np.max(preds)).flatten())
+            return int(np.random.choice(np.argwhere(preds == np.max(preds)).flatten()))
 
     def copy_weights(self):
         self.target_network.set_weights(self.online_network.get_weights())

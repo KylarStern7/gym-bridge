@@ -17,7 +17,7 @@ class BridgeEnv(gym.Env):
                 'observation_space.modes': ['integer', 'multi_binary', 'mixed'],
                 'reward.modes': ['win_contract', 'win_tricks', 'win_points', 'play_cards']}
 
-    def __init__(self, action_space_mode='multi_binary', observation_space_mode='integer', reward_mode='play_cards',
+    def __init__(self, action_space_mode='integer', observation_space_mode='multi_binary', reward_mode='play_cards',
                  render_mode='ansi'):
         self.action_space_mode = action_space_mode
         self.observation_space_mode = observation_space_mode
@@ -93,10 +93,10 @@ class BridgeEnv(gym.Env):
             self.trump = initial_state.get('trump', 0)
             self.contract_value = initial_state.get('contract_value', 0)
             self.state = {'active_player': self.players_roles.get('defender_1', 'E'),
-                          'hands': {'N': CardList().add_cards(initial_state.get('hands').get('N')),
-                                    'E': CardList().add_cards(initial_state.get('hands').get('E')),
-                                    'S': CardList().add_cards(initial_state.get('hands').get('S')),
-                                    'W': CardList().add_cards(initial_state.get('hands').get('W'))},
+                          'hands': {'N': CardList().add_cards(initial_state.get('hands', {}).get('N', [])),
+                                    'E': CardList().add_cards(initial_state.get('hands', {}).get('E', [])),
+                                    'S': CardList().add_cards(initial_state.get('hands', {}).get('S', [])),
+                                    'W': CardList().add_cards(initial_state.get('hands', {}).get('W', []))},
                           'table': {'N': CardList(),
                                     'E': CardList(),
                                     'S': CardList(),
@@ -105,6 +105,8 @@ class BridgeEnv(gym.Env):
                           'won_tricks': {plr: 0 for plr in self.players},
                           'current_suit': None,
                           }
+            if not initial_state.get('hands'):
+                self._deal_random_cards()
             self.render_state = deepcopy(self.state)
             if self.viewer:
                 self.viewer.reset()
@@ -344,13 +346,16 @@ class BridgeEnv(gym.Env):
 
         elif self.reward_mode == 'play_cards':
             if chosen_card_is_valid:
-                rewards[self.state['active_player']] = 0
+                rewards[self.state['active_player']] = 1
 
         else:
             raise Exception(f'Reward mode "{self.reward_mode}" is not supported. Available reward'
                             f' modes are: {self.metadata["reward.modes"]}')
         if not chosen_card_is_valid:
-            rewards[self.state['active_player']] = -1000
+            if self.reward_mode == 'win_points':
+                rewards[self.state['active_player']] = -1000
+            else:
+                rewards[self.state['active_player']] = -2
 
         return rewards
 
