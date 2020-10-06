@@ -12,6 +12,153 @@ from ..rendering.rendering import Viewer
 
 # noinspection SpellCheckingInspection,PyTypeChecker
 class BridgeSimultaneousActionsEnv(gym.Env):
+    """
+    Description:
+        This is a multi-agent bridge play environment. At each step only one agent can take action.
+        Action, observation, and rewards depends on configuration of environment.
+        All possible configuration modes are given in environment.metadata.
+
+    Observation:
+        Type: Dict() - dependent on configuration parameter "observation_mode", types of values can differ
+        but keys are same.
+        Keys:
+            "player_position" - position of agent
+            "dummy_position" - position of dummy
+            "active_player_position" - position of player whose turn is
+            "player_hand" - agent's cards
+            "dummy_hand" - dummy's cards
+            "table" - cards on table
+            "played_tricks" - history of all tricks
+            "current_suit" - suit of firts card, that has benn played in current trick
+            "trump" - trump suit
+            "contract_value" - value of contract
+            "won_tricks" - number of agent's won tricks
+        Values types:
+            "integer":
+                "player_position" - Discrete(4)
+                "dummy_position" - Discrete(4)
+                "active_player_position" - Discrete(4)
+                "player_hand" - MultiIntegerLimited(0, 13, 0, 51)
+                "dummy_hand" - MultiIntegerLimited(0, 13, 0, 51)
+                "table" - Dict({
+                    "N": MultiIntegerLimited(0, 13, 0, 51),
+                    "E": MultiIntegerLimited(0, 13, 0, 51),
+                    "S": MultiIntegerLimited(0, 13, 0, 51),
+                    "W": MultiIntegerLimited(0, 13, 0, 51)
+                    })
+                "played_tricks" - Dict({
+                    0: Dict({
+                        "N": MultiIntegerLimited(0, 13, 0, 51),
+                        "E": MultiIntegerLimited(0, 13, 0, 51),
+                        "S": MultiIntegerLimited(0, 13, 0, 51),
+                        "W": MultiIntegerLimited(0, 13, 0, 51)
+                        }),
+                    .
+                    .
+                    .
+                    12: ...
+                    })
+                "current_suit" - MultiIntegerLimited(0, 1, 0, 3)
+                "trump" - MultiIntegerLimited(0, 1, 0, 3)
+                "contract_value" - MultiIntegerLimited(1, 1, 1, 7)
+                "won_tricks" - MultiIntegerLimited(1, 1, 1, 13)
+
+            "multi_binary":
+                "player_position" - MultiBinaryLimited(4, 1, 1)
+                "dummy_position" - MultiBinaryLimited(4, 1, 1)
+                "active_player_position" - MultiBinaryLimited(4, 1, 1)
+                "player_hand" - MultiBinaryLimited(52, 0, 13)
+                "dummy_hand" - MultiBinaryLimited(52, 0, 13)
+                "table" - Dict({
+                    "N": MultiBinaryLimited(52, 0, 1),
+                    "E": MultiBinaryLimited(52, 0, 1),
+                    "S": MultiBinaryLimited(52, 0, 1),
+                    "W": MultiBinaryLimited(52, 0, 1)
+                    })
+                "played_tricks" - Dict({
+                    0: Dict({
+                        "N": MultiBinaryLimited(52, 0, 1),
+                        "E": MultiBinaryLimited(52, 0, 1),
+                        "S": MultiBinaryLimited(52, 0, 1),
+                        "W": MultiBinaryLimited(52, 0, 1)
+                        }),
+                    .
+                    .
+                    .
+                    12: ...
+                    })
+                "current_suit" - MultiBinaryLimited(4, 0, 1)
+                "trump" - MultiBinaryLimited(4, 0, 1)
+                "contract_value" - MultiBinaryLimited(7, 1, 1)
+                "won_tricks" - MultiBinaryLimited(13, 0, 1)
+            "mixed":
+                "player_position" - Discrete(4)
+                "dummy_position" - Discrete(4)
+                "active_player_position" - Discrete(4)
+                "player_hand" - MultiBinaryLimited(52, 0, 13)
+                "dummy_hand" - MultiBinaryLimited(52, 0, 13)
+                "table" - Dict({
+                    "N": MultiBinaryLimited(52, 0, 1),
+                    "E": MultiBinaryLimited(52, 0, 1),
+                    "S": MultiBinaryLimited(52, 0, 1),
+                    "W": MultiBinaryLimited(52, 0, 1)
+                    })
+                "played_tricks" - Dict({
+                    0: Dict({
+                        "N": MultiBinaryLimited(52, 0, 1),
+                        "E": MultiBinaryLimited(52, 0, 1),
+                        "S": MultiBinaryLimited(52, 0, 1),
+                        "W": MultiBinaryLimited(52, 0, 1)
+                        }),
+                    .
+                    .
+                    .
+                    12: ...
+                    })
+                "current_suit" - MultiIntegerLimited(0, 1, 0, 3)
+                "trump" - MultiIntegerLimited(0, 1, 0, 3)
+                "contract_value" - MultiIntegerLimited(1, 1, 1, 7)
+                "won_tricks" - MultiIntegerLimited(1, 1, 1, 13)
+
+
+    Actions:
+        Type: dependent on configuration parameter "action_mode":
+            "integer": MultiIntegerLimited(0, 1, -1, 51)
+            "multi_binary":  MultiBinaryLimited(52, 0, 1)
+        Note: Each action corresponds to playing one of 52 cards.
+
+    Reward:
+         Reward is dependent on configuration parameter "reward_mode":
+            "win":
+                At the end of episode:
+                    1 if agent has won game
+                    0 if agent has lost game
+            "win_tricks":
+                1 if agent has won trick
+                0 if agent has lost trick
+            "win_points":
+                At the end of episode:
+                    Amount of reward is calculated based on Laws of Duplicate Bridge
+                    (http://www.worldbridge.org/rules-regulations/2017-laws-of-duplicate-bridge/)
+            "play_cards":
+                1 if agent has chosen on of available actions
+        Note: If agent has chosen action that is unavailable in current state he immediately receives reward:
+            -2 in "win", "win_tricks" and "play_cards" configuration
+            -1000 in "win_points" configuration
+
+    Starting State:
+        All parameters of starting state can be set according to user's will by passing "inital_state" argument to
+        environment's reset() function. Otherwise all parameters are set randomly.
+
+    Episode Termination:
+         Last player has played his last card.
+
+    Render:
+        Environment can be rendered in one of two modes:
+            "ansi" - string representation of environment's state
+            "human" - graphic representation of environment's state
+    """
+
     metadata = {'render.modes': ['human', 'ansi'],
                 'action_space.modes': ['integer', 'multi_binary'],
                 'observation_space.modes': ['integer', 'multi_binary', 'mixed'],
@@ -19,6 +166,17 @@ class BridgeSimultaneousActionsEnv(gym.Env):
 
     def __init__(self, action_space_mode='integer', observation_space_mode='integer', reward_mode='play_cards',
                  render_mode='ansi'):
+        """
+        Initialize bridge environment.
+
+        Args:
+            action_space_mode (str): One of "integer", "multi_binary"
+            observation_space_mode (str): One of "integer", "multi_binary", "mixed"
+            reward_mode (str): One of "win", "win_tricks", "win_points", "play_cards"
+            render_mode (str): One of "ansi", "human"
+
+        Note: Description of all configuration modes are provided in class documentation.
+        """
         self.action_space_mode = action_space_mode
         self.observation_space_mode = observation_space_mode
         self.reward_mode = reward_mode
@@ -54,6 +212,21 @@ class BridgeSimultaneousActionsEnv(gym.Env):
         self.tricks_played = 0
 
     def step(self, actions):
+        """
+        Run one timestep of the environment's dynamics.
+
+        Args:
+            actions (dict): dict with actions provided by agents.
+
+        Returns:
+            observations (dict): dict with each agent's observation of the current environment state
+            rewards (dict) : dict with amount of reward for each agent
+            dones (dict): dict with information for each agent whether the episode has ended, in which case further step() calls will return undefined results
+            info (dict): empty dict
+
+        Note: Action and observation types depends on configuration parameters "action_space_mode"
+        and "observation_space_mode".
+        """
         self._game_controller(actions)
         observations = {player: self.get_player_observation(player) for player in self.players}
         rewards = self.rewards
@@ -64,6 +237,22 @@ class BridgeSimultaneousActionsEnv(gym.Env):
         return observations, rewards, dones, info
 
     def reset(self, initial_state=None):
+        """
+        Resets the environment to an initial state and returns an initial observation.
+
+        Args:
+            initial_state (): dict containing information used to create initial state. Dict can contain keys:
+                "player" (str): position of the declarer. One of "N", "E", "S", "W"
+                "trump" (int or None): 0 - clubs, 1 - diamonds, 2 - hearts, 3 - clubs, None - NT (no trump)
+                "contract value" (int): value of contract 1-7
+                "hands" (dict) - dict containing list of cards (integers) for each player ("N", "E", "S", "W")
+
+        Returns:
+            observations (dict): dict with the initial observation for each agent
+
+        Note: Each card is coded by integer. (0 denotes "2 of clubs", 1 denotes "2 of diamonds", 2 denotes "2 of hearts",
+            3 denotes "2 of clubs", 4 denotes "3 of clubs" and so on.
+        """
         if initial_state is None:
             self.tricks_played = 0
             self.n_cards_on_table = 0
@@ -113,10 +302,28 @@ class BridgeSimultaneousActionsEnv(gym.Env):
         return {player: self.get_player_observation(player) for player in self.players}
 
     def seed(self, seed=None):
+        """
+        Sets the seed for this env's random number generator.
+
+        Returns:
+            list<bigint>: Returns the list of seeds used in this env's random
+              number generators.
+        """
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
     def render(self, mode=None):
+        """
+        Renders the environment.
+
+        Args:
+            mode (str): the mode to render with
+
+        Returns:
+            Returned value depends on mode:
+                "ansi" - function returns string containing informations about current state
+                "human" - function returns None, but renders current state to outer window
+        """
         mode = self.render_mode if mode is None else mode
         if mode == 'ansi':
             suits_dict = {0: '\u2663',
@@ -138,11 +345,21 @@ class BridgeSimultaneousActionsEnv(gym.Env):
             self.viewer.render_state(self.render_state)
 
     def close(self):
+        """Method performs necessary cleanup on exit."""
         if self.viewer:
             self.viewer.close()
             self.viewer = None
 
     def get_available_actions(self, player=None):
+        """
+        Function returns agent's available actions.
+
+        Args:
+            player (str): Position of player of which available actions are returned. One of ("N", "E", "S", "W").
+
+        Returns:
+            available_actions (list): List of available actions for given agent.
+        """
         assert player is not None, "No selected player"
         if player == self.state['active_player']:
             if self.state['current_suit'] is None:
@@ -163,11 +380,18 @@ class BridgeSimultaneousActionsEnv(gym.Env):
         else:
             available_actions = CardList().add_cards(-1)
             if self.action_space_mode == 'multi_binary':
-                available_actions = [].append([0] * 52)
+                available_actions = [0] * 52
 
         return available_actions
 
     def _set_players_roles(self, declarer='N'):
+        """
+        Private method for setting role of each player.
+
+        Args:
+            declarer (str): Position of declarer, other players are set according to it. One of ("N", "E", "S", "W"),
+            default "N".
+        """
         if declarer in self.players:
             self.players_roles = {'declarer': declarer,
                                   'defender_1': self._get_next_player(declarer),
@@ -178,6 +402,15 @@ class BridgeSimultaneousActionsEnv(gym.Env):
             raise Exception(f'Setting players roles failed. "{declarer}" is not a valid player.')
 
     def _get_next_player(self, player='N'):
+        """
+        Private method for getting position of the next player (clockwise order).
+
+        Args:
+            player (str): One of players positions ("N", "E", "S", "W").
+
+        Returns:
+            next_player (str): Next position in clockwise order.
+        """
         try:
             next_player = self.players[(self.players.index(player) + 1) % 4]
         except:
@@ -185,6 +418,7 @@ class BridgeSimultaneousActionsEnv(gym.Env):
         return next_player
 
     def _deal_random_cards(self):
+        """Private method for dealing random cards to all players."""
         random_cards = list(range(52))
         shuffle(random_cards)
         self.state['hands']['N'].add_cards(random_cards[0:13]).sort_cards()
@@ -193,6 +427,29 @@ class BridgeSimultaneousActionsEnv(gym.Env):
         self.state['hands']['W'].add_cards(random_cards[39:52]).sort_cards()
 
     def get_player_observation(self, player):
+        """
+        Function returns player's observation of current state.
+
+        Args:
+            player (str): One of players positions ("N", "E", "S", "W").
+
+        Returns:
+            observation (dict): Player's observation of current state. Type of values in observation depends on
+            configuration parameter "observation_space_mode". Observation contains keys:
+                "player_position" - position of agent
+                "dummy_position" - position of dummy
+                "active_player_position" - position of player whose turn is
+                "player_hand" - agent's cards
+                "dummy_hand" - dummy's cards
+                "table" - cards on table
+                "played_tricks" - history of all tricks
+                "current_suit" - suit of first card, that has benn played in current trick
+                "trump" - trump suit
+                "contract_value" - value of contract
+                "won_tricks" - number of agent's won tricks
+
+        Note: Values types for each "observation_space_mode" are provided in class docstring.
+        """
         observation = dict()
         if self.observation_space_mode == 'integer':
             observation['player_position'] = self.players.index(player)
@@ -245,6 +502,16 @@ class BridgeSimultaneousActionsEnv(gym.Env):
         return observation
 
     def _game_controller(self, actions):
+        #TODO: expand docstring
+        """
+        Private method that controls the flow of the game.
+
+        Function changes current state based on provided action. It moves cards between players hands, table
+        and played cards.
+
+        Args:
+            actions (dict): dict with actions provided by agents.
+        """
         trick_winner = None
         actions_are_valid = {player: actions.get(player) in self.get_available_actions(player)
                              for player in self.players}
@@ -279,6 +546,12 @@ class BridgeSimultaneousActionsEnv(gym.Env):
         return next_player
 
     def _get_trick_winner(self):
+        """
+        Private method used to find the trick winner.
+
+        Returns:
+            trick_winner (str): Trick winner's position. One of ("N", "E", "S", "W").
+        """
         assert self.n_cards_on_table == 4, "Every player has to play a card."
         trick_winner = self.players[np.argmax([card.one_card_power(self.state['current_suit'], self.trump)
                                                for card in self.state['table'].values()])]
@@ -286,6 +559,18 @@ class BridgeSimultaneousActionsEnv(gym.Env):
         return trick_winner
 
     def _get_rewards(self, trick_winner=None, chosen_cards_are_valid=None):
+        """
+        Private method used to calculating players rewards.
+
+        Rewards values depends on configuration parameter "reward_mode".
+
+        Args:
+            trick_winner (str): Trick winner's position. One of ("N", "E", "S", "W").
+            chosen_cards_are_valid (dict): Dict with information for each agent if his last performed action was valid.
+
+        Returns:
+            rewards (dict): dict with reward's value for each player.
+        """
         if chosen_cards_are_valid is None:
             chosen_cards_are_valid = {'N': True, 'E': True, 'S': True, 'W': True}
         rewards = deepcopy(self.rewards)
@@ -339,18 +624,33 @@ class BridgeSimultaneousActionsEnv(gym.Env):
                             f' modes are: {self.metadata["reward.modes"]}')
         for player, valid_card in chosen_cards_are_valid.items():
             if not valid_card:
-                rewards[player] = -1000
+                if self.reward_mode == 'win_points':
+                    rewards[player] = -1000
+                else:
+                    rewards[player] = -2
 
         return rewards
 
     def _clear_table(self):
-        # Move cards form "table" to "played"
+        """
+        Private method for removing cards from table.
+
+        This function is used after every played trick.
+        """
         for player in self.players:
             self.state['played_tricks'][self.tricks_played][player].add_cards(self.state['table'][player].remove_card())
         self.n_cards_on_table = 0
         self.state['current_suit'] = None
 
     def _init_action_space(self):
+        """
+        Initialize action space based on environment configuration.
+
+        Returns:
+            action_space (space): action space defines format of valid actions.
+
+        Note: Values types for each "action_space_mode" are provided in class docstring.
+        """
         if self.action_space_mode == 'integer':
             action_space = MultiIntegerLimited(0, 1, -1, 51)
         elif self.action_space_mode == 'multi_binary':
@@ -361,6 +661,14 @@ class BridgeSimultaneousActionsEnv(gym.Env):
         return action_space
 
     def _init_observation_space(self):
+        """
+        Initialize observation space based on environment configuration.
+
+        Returns:
+            observation_space (space): observation space defines format of valid observations.
+
+        Note: Values types for each "observation_space_mode" are provided in class docstring.
+        """
         if self.observation_space_mode == 'integer':
             observation_space = spaces.Dict({
                 'player_position': spaces.Discrete(4),
