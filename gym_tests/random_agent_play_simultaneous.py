@@ -1,3 +1,9 @@
+"""
+Script for testing BridgeSimultaneousActionsEnv environment.
+
+Three AgentRandom and one AgentDummy agents are initialized and used to interact with the environment.
+"""
+
 import gym
 from time import sleep
 from agents import AgentRandom, AgentDummy

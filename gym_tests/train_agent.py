@@ -1,3 +1,19 @@
+"""
+Script for training AgentDQN with BridgeEnv environment.
+
+During training AgentDQN has permanent position ("E") and role ("defender_1").
+Other players are AgentRandom instances.
+AgentDQN is initialized with parameters:
+    gamma = 0.75
+    max_experiences = 1000
+    min_experiences = 500
+    batch_size = 64
+    epsilon = 0.99
+
+Training is performed during 20000 environment episodes with epsilon_decay set to 0.9997
+and minimal epsilon set to 0.01. At the end of training agent's neural network model is saved to "model.h5" file.
+"""
+
 import gym
 from agents import AgentDQN, AgentRandom
 import numpy as np

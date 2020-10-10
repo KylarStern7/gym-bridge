@@ -1,7 +1,14 @@
+"""
+Script for evaluating trained AgentDQN in BridgeEnv environment.
+
+During evaluation AgentDQN has permanent position ("E") and role ("defender_1").
+Other players are AgentRandom instances.
+
+Evaluation is performed on 1000 environment episodes.
+"""
 import gym
 from agents import AgentDQN, AgentRandom
 import numpy as np
-from time import time
 from tensorflow.keras.models import load_model
 
 env = gym.make('gym_bridge:bridge-v0', reward_mode='play_cards')
@@ -30,8 +37,6 @@ for i in range(episode_count):
     action_list = []
     done_list = [0] * 12 + [1]
     total_rewards_per_episode = 0
-    #t = time()
-    #env.render()
     reward = None
     done = False
     while True:
@@ -43,7 +48,6 @@ for i in range(episode_count):
             if reward is not None:
                 reward_list.append(reward)
                 total_rewards_per_trick[str(env.tricks_played)].append(reward)
-            #done_list.append(done)
             action = agent.act(ob)
             last_card = env.state.get('hands').get('E')[0]
             action_learning_agent = action
@@ -54,8 +58,6 @@ for i in range(episode_count):
             action = agent.act(available_actions, ob, reward, done)
 
         ob, reward, done, _ = env.step(action)
-        #sleep(1)
-        #env.render()
         if done:
             if last_card == action_learning_agent:
                 reward_list.append(1)
@@ -69,5 +71,5 @@ for i in range(episode_count):
 env.close()
 print([(i, r) for i, r in enumerate(total_rewards)])
 print(np.mean(total_rewards))
-for i,v in total_rewards_per_trick.items():
+for i, v in total_rewards_per_trick.items():
     print(i, np.mean(v))
