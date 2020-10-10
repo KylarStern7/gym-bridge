@@ -247,7 +247,7 @@ class BridgeEnv(gym.Env):
                 "hands" (dict) - dict containing list of cards (integers) for each player ("N", "E", "S", "W")
 
         Returns:
-            observation (object): the initial observation
+            The initial observation
 
         Note: Each card is coded by integer. (0 denotes "2 of clubs", 1 denotes "2 of diamonds", 2 denotes "2 of hearts",
             3 denotes "2 of clubs", 4 denotes "3 of clubs" and so on.
@@ -307,7 +307,7 @@ class BridgeEnv(gym.Env):
         Sets the seed for this env's random number generator.
 
         Returns:
-            list<bigint>: Returns the list of seeds used in this env's random
+            list<bigint>: List of seeds used in this env's random
               number generators.
         """
         self.np_random, seed = seeding.np_random(seed)
@@ -359,7 +359,7 @@ class BridgeEnv(gym.Env):
             player (str): Position of player of which available actions are returned. One of ("N", "E", "S", "W").
 
         Returns:
-            available_actions (list): List of available actions for given agent.
+            list: List of available actions for given agent.
         """
         assert player is not None, "No selected player"
         if self.state['current_suit'] is None:
@@ -405,7 +405,7 @@ class BridgeEnv(gym.Env):
             player (str): One of players positions ("N", "E", "S", "W").
 
         Returns:
-            next_player (str): Next position in clockwise order.
+            str: Next position in clockwise order.
         """
         try:
             next_player = self.players[(self.players.index(player) + 1) % 4]
@@ -430,19 +430,19 @@ class BridgeEnv(gym.Env):
             player (str): One of players positions ("N", "E", "S", "W").
 
         Returns:
-            observation (dict): Player's observation of current state. Type of values in observation depends on
-            configuration parameter "observation_space_mode". Observation contains keys:
-                "player_position" - position of agent
-                "dummy_position" - position of dummy
-                "active_player_position" - position of player whose turn is
-                "player_hand" - agent's cards
-                "dummy_hand" - dummy's cards
-                "table" - cards on table
-                "played_tricks" - history of all tricks
-                "current_suit" - suit of first card, that has benn played in current trick
-                "trump" - trump suit
-                "contract_value" - value of contract
-                "won_tricks" - number of agent's won tricks
+            dict: Player's observation of current state. Type of values in observation depends on
+                configuration parameter "observation_space_mode". Observation contains keys:
+                    "player_position" - position of agent
+                    "dummy_position" - position of dummy
+                    "active_player_position" - position of player whose turn is
+                    "player_hand" - agent's cards
+                    "dummy_hand" - dummy's cards
+                    "table" - cards on table
+                    "played_tricks" - history of all tricks
+                    "current_suit" - suit of first card, that has benn played in current trick
+                    "trump" - trump suit
+                    "contract_value" - value of contract
+                    "won_tricks" - number of agent's won tricks
 
         Note: Values types for each "observation_space_mode" are provided in class docstring.
         """
@@ -506,7 +506,7 @@ class BridgeEnv(gym.Env):
         and played cards.
 
         Args:
-            action (object): an action provided by the agent.
+            An action provided by the agent.
         """
         trick_winner = None
 
@@ -543,7 +543,7 @@ class BridgeEnv(gym.Env):
         Private method used to find the trick winner.
 
         Returns:
-            trick_winner (str): Trick winner's position. One of ("N", "E", "S", "W").
+            str: Trick winner's position. One of ("N", "E", "S", "W").
         """
         assert self.n_cards_on_table == 4, "Every player has to play a card."
         trick_winner = self.players[np.argmax([card.one_card_power(self.state['current_suit'], self.trump)
@@ -562,7 +562,7 @@ class BridgeEnv(gym.Env):
             chosen_card_is_valid (bool): Indicates if last performed action was valid.
 
         Returns:
-            rewards (dict): dict with reward's value for each player.
+            dict: dict with reward's value for each player.
         """
         rewards = deepcopy(self.rewards)
 
@@ -660,7 +660,7 @@ class BridgeEnv(gym.Env):
         Initialize action space based on environment configuration.
 
         Returns:
-            action_space (space): action space defines format of valid actions.
+            gym.space: action space defines format of valid actions.
 
         Note: Values types for each "action_space_mode" are provided in class docstring.
         """
@@ -679,7 +679,7 @@ class BridgeEnv(gym.Env):
         Initialize observation space based on environment configuration.
 
         Returns:
-            observation_space (space): observation space defines format of valid observations.
+            gym.space: observation space defines format of valid observations.
 
         Note: Values types for each "observation_space_mode" are provided in class docstring.
         """
