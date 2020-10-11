@@ -165,7 +165,7 @@ class BridgeEnv(gym.Env):
                 'reward.modes': ['win', 'win_tricks', 'win_points', 'play_cards']}
 
     def __init__(self, action_space_mode='integer', observation_space_mode='multi_binary', reward_mode='play_cards',
-                 render_mode='ansi'):
+                 render_mode='human'):
         """
         Initialize bridge environment.
 
@@ -278,9 +278,9 @@ class BridgeEnv(gym.Env):
         else:
             self.tricks_played = 0
             self.n_cards_on_table = 0
-            self._set_players_roles(initial_state.get('player', 'N'))
-            self.trump = initial_state.get('trump', 0)
-            self.contract_value = initial_state.get('contract_value', 0)
+            self._set_players_roles(initial_state.get('player', choice(self.players)))
+            self.trump = initial_state.get('trump', choice([0, 1, 2, 3, None]))
+            self.contract_value = initial_state.get('contract_value', choice([1, 2, 3, 4, 5, 6, 7]))
             self.state = {'active_player': self.players_roles.get('defender_1', 'E'),
                           'hands': {'N': CardList().add_cards(initial_state.get('hands', {}).get('N', [])),
                                     'E': CardList().add_cards(initial_state.get('hands', {}).get('E', [])),
@@ -342,7 +342,8 @@ class BridgeEnv(gym.Env):
             if self.viewer is None:
                 self.viewer = Viewer()
             if not self.viewer.window_running:
-                self.viewer.init_view(self.render_state['hands'], self.contract_value, self.trump)
+                self.viewer.init_view(self.render_state['hands'], self.contract_value, self.trump,
+                                      self.players_roles.get('dummy'))
             self.viewer.render_state(self.render_state)
 
     def close(self):
