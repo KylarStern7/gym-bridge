@@ -385,6 +385,9 @@ class BridgeSimultaneousActionsEnv(gym.Env):
 
         return available_actions
 
+    def get_active_player(self):
+        return self.state.get("active_player", None)
+
     def _set_players_roles(self, declarer='N'):
         """
         Private method for setting role of each player.
