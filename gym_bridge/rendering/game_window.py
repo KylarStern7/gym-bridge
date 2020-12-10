@@ -56,7 +56,7 @@ class GameWindowStatic(pyglet.window.Window):
     """Window for displaying BrdigeEnv environment state."""
     def __init__(self):
         super(GameWindowStatic, self).__init__(1280, 800, resizable=True)
-        self.set_fullscreen()
+        #self.set_fullscreen()
         self.set_minimum_size(640, 480)
         self.set_caption("Bridge")
 
@@ -155,11 +155,11 @@ class GameWindowStatic(pyglet.window.Window):
         assert player is not None, "Player None"
         self.dummy = player
         if self.dummy == 'N':
-            self.label_N.text += " (dummy)"
+            self.label_N.text += "(dummy)"
         elif self.dummy == 'E':
             self.label_E.text += "\n(\nd\nu\nm\nm\ny\n)"
         elif self.dummy == 'S':
-            self.label_S.text += " (dummy)"
+            self.label_S.text += "(dummy)"
         elif self.dummy == 'W':
             self.label_W.text += "\n(\nd\nu\nm\nm\ny\n)"
 

@@ -68,8 +68,9 @@ for i in range(episode_count):
 
             break
     total_rewards.append(np.sum(reward_list))
+    print(f'Episode {i} ended with total reward: {np.sum(reward_list)}/13.')
 env.close()
-print([(i, r) for i, r in enumerate(total_rewards)])
-print(np.mean(total_rewards))
+#print([(i, r) for i, r in enumerate(total_rewards)])
+print(f'Mean reward per episode: {np.mean(total_rewards)}')
 for i, v in total_rewards_per_trick.items():
-    print(i, np.mean(v))
+    print(f'Mean reward in trick number {i}: {np.mean(v)}')

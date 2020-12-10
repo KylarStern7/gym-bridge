@@ -332,7 +332,9 @@ class BridgeEnv(gym.Env):
                           2: '\u2665',
                           3: '\u2660',
                           None: 'NT'}
-            render_info = f'Players roles: {self.players_roles}\n' \
+            render_info = f'*************************\n' \
+                          f'Trick number: {self.tricks_played+1}\n' \
+                          f'Players roles: {self.players_roles}\n' \
                           f'Players hands: {self.render_state.get("hands")}\n' \
                           f'Table: {self.render_state.get("table")}\n' \
                           f'Contract: {self.contract_value}{suits_dict.get(self.trump)}\n' \
